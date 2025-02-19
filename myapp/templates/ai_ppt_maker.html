@@ -1,0 +1,215 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Presentation Maker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'myapp/css/styles.css' %}">
+
+    <style>
+        body {
+            background-image: url("{% static 'myapp/images/background.jpg' %}");
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            text-align: center;
+            color: #fff;
+            padding: 0 20px;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin: 20px 0;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        .form-container {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 30px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+        }
+
+        .form-group img {
+            width: 50px;
+            height: 50px;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+
+        .btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 10px 0;
+            font-size: 0.9em;
+        }
+
+        .alert {
+            background-color: #ff6f61;
+            color: white;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+            animation: fadein 1s;
+        }
+
+        @keyframes fadein {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .form-container {
+                padding: 20px;
+            }
+
+            .btn {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>AI Presentation Maker</h1>
+            <p>Create stunning PowerPoint presentations with the power of AI!</p>
+        </header>
+
+        <div class="form-container">
+            <form method="POST" enctype="multipart/form-data" onsubmit="return validateForm()">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="prompt">Enter Slide Prompt:</label>
+                    <input type="text" id="prompt" name="prompt" placeholder="e.g. 'Create a presentation about AI'" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="template">Select a PowerPoint Template (Option 1):</label>
+                    <select id="template" name="template" onchange="updateThumbnail()">
+                        <option value="" disabled selected>Select a template</option>
+                        {% for template in templates %}
+                            <option value="{{ template.id }}" data-thumbnail="{% if template.thumbnail %}{{ template.thumbnail.url }}{% else %}{% static 'myapp/images/default-thumbnail.jpg' %}{% endif %}">
+                                {{ template.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <div id="thumbnail-preview" style="margin-top: 10px;"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="custom_template">Upload a Custom Template (Option 2):</label>
+                    <input type="file" id="custom_template" name="custom_template">
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn">Generate Presentation</button>
+                </div>
+            </form>
+        </div>
+
+        {% if message %}
+            <div class="alert">{{ message }}</div>
+        {% endif %}
+    </div>
+
+    <footer class="footer">
+        <p>Powered by AI | Created by Team Catalyst</p>
+    </footer>
+
+    <script>
+        function validateForm() {
+            var templateSelected = document.getElementById('template').value;
+            var customTemplate = document.getElementById('custom_template').files.length;
+
+            if (!templateSelected && !customTemplate) {
+                alert("Please either select a template or upload a custom template.");
+                return false;
+            }
+            return true;
+        }
+
+        function updateThumbnail() {
+            var select = document.getElementById("template");
+            var selectedOption = select.options[select.selectedIndex];
+            var thumbnailUrl = selectedOption.getAttribute("data-thumbnail");
+
+            var previewDiv = document.getElementById("thumbnail-preview");
+            if (thumbnailUrl) {
+                previewDiv.innerHTML = '<img src="' + thumbnailUrl + '" alt="Template Thumbnail" style="max-width: 150px; height: auto; border-radius: 8px;">';
+            } else {
+                previewDiv.innerHTML = '<img src="{% static 'myapp/images/default-thumbnail.jpg' %}" alt="Default Thumbnail" style="max-width: 150px; height: auto; border-radius: 8px;">';
+            }
+        }
+    </script>
+</body>
+</html>
+
+
+
