@@ -1,0 +1,6 @@
+Django==5.0.2
+openai==1.61.0
+Pillow==11.1.0
+python-dotenv==1.0.1
+python_pptx==1.0.2
+Requests==2.32.3
